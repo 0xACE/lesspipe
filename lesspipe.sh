@@ -802,7 +802,7 @@ isfinal() {
     fi
   elif [[ "$1" = *MP4\ Base\ Media* || "$1" = *Matroska\ data* || "$1" = *AVI,\ *video* || "$1" = *Microsoft\ ASF* \
     || "$1" = *Apple\ iTunes\ ALAC/AAC-LC* || "$1" = *WAVE\ audio* || "$1" = *FLAC\ audio* || "$1" = *WebM* \
-    || "$1" = *Audio\ file* ]]; then
+    || "$1" = *Audio\ file*  || "$1" =  *Apple\ QuickTime* ]]; then
     if cmd_exist mediainfo; then
       msg "append $sep to filename to view the raw data"
       mediainfo "$2"
