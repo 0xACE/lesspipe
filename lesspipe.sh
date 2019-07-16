@@ -527,6 +527,18 @@ isfinal() {
       lang=${3#$sep}
       lang="-l ${lang#.}"
       lang=${lang%%-l }
+      if cmd_exist source-highlight; then
+     case "$2" in
+         *ChangeLog|*changelog)
+         source-highlight --failsafe -f esc --lang-def=changelog.lang --style-file=esc.style -i "$2"
+         ;;
+         *Makefile|*makefile)
+         source-highlight --failsafe -f esc --lang-def=makefile.lang --style-file=esc.style -i "$2"
+         ;;
+         *)
+         source-highlight --failsafe -f esc --lang-def=${lang}.lang  --style-file=esc.style -i "$2"
+     esac
+      fi
       if cmd_exist code2color; then
         code2color $PPID ${in_file:+"$in_file"} $lang "$2"
         if [[ $? = 0 ]]; then
@@ -635,6 +647,7 @@ isfinal() {
     fi
   elif [[ "$1" = *executable* ]]; then
     msg "append $sep to filename to view the raw file"
+    # strings --help shows -a to be default (safe)
     nodash strings "$2"
   elif [[ "$1" = *\ ar\ archive* ]]; then
     msg "use library${sep}contained_file to view a file in the archive"
@@ -763,19 +776,36 @@ isfinal() {
       echo "================================= Content ======================================"
       isoinfo -lR$joliet -i "$2"
     fi
-  elif [[ "$1" = *image\ data*  || "$1" = *JPEG\ file* || "$1" = *JPG\ file* ]] && cmd_exist identify; then
+  elif [[ "$1" = *image\ data*  || "$1" = *JPEG\ file* || "$1" = *JPG\ file* || "$1" = *Web/P\ image* ]]; then
     msg "append $sep to filename to view the raw data"
-    identify -verbose "$2"
+    if cmd_exist viu; then
+      viu "$2"
+    fi
+    if cmd_exist mediainfo; then
+      mediainfo "$2"
+    elif cmd_exist identify; then
+      identify -verbose "$2"
+    fi
   elif [[ "$1" = *MPEG\ *layer\ 3\ audio* || "$1" = *MPEG\ *layer\ III* || "$1" = *mp3\ file* || "$1" = *MP3* ]]; then
     if cmd_exist id3v2; then
       msg "append $sep to filename to view the raw data"
       istemp "id3v2 -l" "$2"
+    elif cmd_exist mediainfo; then
+      msg "append $sep to filename to view the raw data"
+      mediainfo "$2"
     elif cmd_exist mp3info2; then
       msg "append $sep to filename to view the raw data"
       mp3info2 "$2"
     elif cmd_exist mp3info; then
       msg "append $sep to filename to view the raw data"
       mp3info "$2"
+    fi
+  elif [[ "$1" = *MP4\ Base\ Media* || "$1" = *Matroska\ data* || "$1" = *AVI,\ *video* || "$1" = *Microsoft\ ASF* \
+    || "$1" = *Apple\ iTunes\ ALAC/AAC-LC* || "$1" = *WAVE\ audio* || "$1" = *FLAC\ audio* || "$1" = *WebM* \
+    || "$1" = *Audio\ file* ]]; then
+    if cmd_exist mediainfo; then
+      msg "append $sep to filename to view the raw data"
+      mediainfo "$2"
     fi
   elif [[ "$1" = *bill\ of\ materials* ]] && cmd_exist lsbom; then
     msg "append $sep to filename to view the raw data"
@@ -797,6 +827,7 @@ isfinal() {
     plutil -convert xml1 -o - "$2"
   elif [[ "$1" = *data$NOL_A_P* ]]; then
     msg "append $sep to filename to view the raw data"
+    # strings --help shows -a to be default (safe)
     nodash strings "$2"
   elif [[ "$2" = *.crt || "$2" = *.pem ]] && cmd_exist openssl; then
     msg "append $sep to filename to view the raw data"
@@ -811,6 +842,19 @@ isfinal() {
     set "plain text" "$2"
   fi
   if [[ "$1" = *plain\ text* ]]; then
+    if cmd_exist source-highlight; then
+      case "$2" in
+   *ChangeLog|*changelog)
+     source-highlight --failsafe -f esc --lang-def=changelog.lang --style-file=esc.style -i "$2"
+     ;;
+   *Makefile|*makefile)
+       source-highlight --failsafe -f esc --lang-def=makefile.lang --style-file=esc.style -i "$2"
+       ;;
+   *)
+       source-highlight --failsafe -f esc --infer-lang --style-file=esc.style -i "$2"
+      esac
+      return
+    fi
     if cmd_exist code2color; then
       code2color $PPID ${in_file:+"$in_file"} "$2"
       if [[ $? = 0 ]]; then
